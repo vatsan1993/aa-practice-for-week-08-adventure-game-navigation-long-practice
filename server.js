@@ -11,20 +11,20 @@ let world = new World();
 world.loadWorld(worldData);
 
 const server = http.createServer((req, res) => {
-
   /* ============== ASSEMBLE THE REQUEST BODY AS A STRING =============== */
   let reqBody = '';
   req.on('data', (data) => {
     reqBody += data;
   });
 
-  req.on('end', () => { // After the assembly of the request body is finished
+  req.on('end', () => {
+    // After the assembly of the request body is finished
     /* ==================== PARSE THE REQUEST BODY ====================== */
     if (reqBody) {
       req.body = reqBody
-        .split("&")
-        .map((keyValuePair) => keyValuePair.split("="))
-        .map(([key, value]) => [key, value.replace(/\+/g, " ")])
+        .split('&')
+        .map((keyValuePair) => keyValuePair.split('='))
+        .map(([key, value]) => [key, value.replace(/\+/g, ' ')])
         .map(([key, value]) => [key, decodeURIComponent(value)])
         .reduce((acc, [key, value]) => {
           acc[key] = value;
@@ -34,6 +34,15 @@ const server = http.createServer((req, res) => {
 
     /* ======================== ROUTE HANDLERS ========================== */
     // Phase 1: GET /
+    if ((req.url = '/')) {
+      let newPlayerHtml = fs.readFileSync('./views/new-player.html', 'utf-8');
+      newPlayerHtml = newPlayerHtml.replace(
+        '#{availableRooms}',
+        world.availableRoomsToString()
+      );
+      res.write(newPlayerHtml);
+      return res.end();
+    }
 
     // Phase 2: POST /player
 
@@ -44,7 +53,7 @@ const server = http.createServer((req, res) => {
     // Phase 5: POST /items/:itemId/:action
 
     // Phase 6: Redirect if no matching route handlers
-  })
+  });
 });
 
 const port = 5000;
