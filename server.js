@@ -32,15 +32,30 @@ const server = http.createServer((req, res) => {
         }, {});
     }
 
+    console.log(`${req.method} ${req.url}`);
     /* ======================== ROUTE HANDLERS ========================== */
     // Phase 1: GET /
-    if ((req.url = '/')) {
+    if (req.url == '/' && req.method == 'GET') {
       let newPlayerHtml = fs.readFileSync('./views/new-player.html', 'utf-8');
       newPlayerHtml = newPlayerHtml.replace(
         '#{availableRooms}',
         world.availableRoomsToString()
       );
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'text/html');
       res.write(newPlayerHtml);
+      return res.end();
+    } else if (req.url === '/player' && req.method === 'POST') {
+      const { name, roomId } = req.body;
+      const startingRoom = world.rooms[roomId];
+      player = new Player(name, startingRoom);
+
+      res.statusCode = 302;
+      res.setHeader('Content-Type', 'text/html');
+      res.setHeader('Location', `/rooms/${roomId}`);
+      return res.end();
+    } else {
+      console.log('not matching');
       return res.end();
     }
 
