@@ -54,25 +54,33 @@ const server = http.createServer((req, res) => {
       res.setHeader('Content-Type', 'text/html');
       res.setHeader('Location', `/rooms/${roomId}`);
       return res.end();
-    } else if (req.method == 'GET' && req.url.startsWith('/rooms')) {
+    } else if (req.method == 'GET' && req.url.startsWith('/room')) {
       let urlParts = req.url.split('/');
       if (urlParts.length === 3) {
-        const roomId = urlParts[2];
+        const roomId = parseInt(urlParts[2]);
         const currentRoom = player.currentRoom;
-        const roomName = currentRoom.name;
-        const exists = currentRoom.exitsToString();
-        const roomItems = currentRoom.itemsToString();
-        const inventory = player.inventoryToString();
-        let roomHtml = fs.readFileSync('./views/room.html', 'utf-8');
-        roomHtml = roomHtml.replaceAll('#{roomName}', roomName);
-        roomHtml = roomHtml.replace('#{roomItems}', roomItems);
-        roomHtml = roomHtml.replace('#{inventory}', inventory);
-        roomHtml = roomHtml.replace('#{roomId}', roomId);
-        roomHtml = roomHtml.replace('#{exists}', exists);
-        res.statusCode = 200;
-        res.setHeader('Content-Type', 'text/html');
-        res.write(roomHtml);
-        return res.end();
+        if (roomId === currentRoom.id) {
+          const roomName = currentRoom.name;
+          const exists = currentRoom.exitsToString();
+          const roomItems = currentRoom.itemsToString();
+          const inventory = player.inventoryToString();
+          let roomHtml = fs.readFileSync('./views/room.html', 'utf-8');
+          roomHtml = roomHtml.replaceAll('#{roomName}', roomName);
+          roomHtml = roomHtml.replace('#{roomItems}', roomItems);
+          roomHtml = roomHtml.replace('#{inventory}', inventory);
+          roomHtml = roomHtml.replace('#{roomId}', roomId);
+          roomHtml = roomHtml.replace('#{exists}', exists);
+          res.statusCode = 200;
+          res.setHeader('Content-Type', 'text/html');
+          res.write(roomHtml);
+          return res.end();
+        } else {
+          res.statusCode = 302;
+          res.setHeader('Location', `/room/${currentRoom.id}`);
+          res.setHeader('Content-Type', 'text/html');
+
+          return res.end();
+        }
       }
     } else {
       console.log('not matching');
