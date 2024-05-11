@@ -110,7 +110,7 @@ const server = http.createServer((req, res) => {
     } else if (req.url.startsWith('/items/')) {
       let urlParts = req.url.split('/');
       if (urlParts.length === 4) {
-        const itemId = urlParts[2];
+        const itemId = parseInt(urlParts[2]);
         const action = urlParts[3];
         try {
           switch (action) {
@@ -132,9 +132,12 @@ const server = http.createServer((req, res) => {
           res.setHeader('Content-Type', 'text/html');
         } catch (error) {
           const newRoom = player.currentRoom;
-          res.statusCode = 302;
-          res.setHeader('Location', `/rooms/${newRoom.id}`);
+          let errorPage = fs.readFileSync('./views/error.html', 'utf-8');
+          errorPage = errorPage.replace('#{errorMessage}', error.message);
+          errorPage = errorPage.replace('#{roomId}', newRoom.id);
+          res.statusCode = 404;
           res.setHeader('Content-Type', 'text/html');
+          res.write(errorPage);
           return res.end();
         }
       }
@@ -146,20 +149,10 @@ const server = http.createServer((req, res) => {
     } else {
       const newRoom = player.currentRoom;
       res.statusCode = 302;
-      res.setHeader('Location', `/room/${currentRoom.id}`);
+      res.setHeader('Location', `/rooms/${newRoom.id}`);
       res.setHeader('Content-Type', 'text/html');
       return res.end();
     }
-
-    // Phase 2: POST /player
-
-    // Phase 3: GET /rooms/:roomId
-
-    // Phase 4: GET /rooms/:roomId/:direction
-
-    // Phase 5: POST /items/:itemId/:action
-
-    // Phase 6: Redirect if no matching route handlers
   });
 });
 
