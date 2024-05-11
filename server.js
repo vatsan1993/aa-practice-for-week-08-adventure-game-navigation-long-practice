@@ -54,36 +54,100 @@ const server = http.createServer((req, res) => {
       res.setHeader('Content-Type', 'text/html');
       res.setHeader('Location', `/rooms/${roomId}`);
       return res.end();
-    } else if (req.method == 'GET' && req.url.startsWith('/room')) {
+    } else if (req.method == 'GET' && req.url.startsWith('/rooms')) {
       let urlParts = req.url.split('/');
       if (urlParts.length === 3) {
         const roomId = parseInt(urlParts[2]);
         const currentRoom = player.currentRoom;
         if (roomId === currentRoom.id) {
           const roomName = currentRoom.name;
-          const exists = currentRoom.exitsToString();
+          const exits = currentRoom.exitsToString();
           const roomItems = currentRoom.itemsToString();
+
           const inventory = player.inventoryToString();
           let roomHtml = fs.readFileSync('./views/room.html', 'utf-8');
           roomHtml = roomHtml.replaceAll('#{roomName}', roomName);
           roomHtml = roomHtml.replace('#{roomItems}', roomItems);
           roomHtml = roomHtml.replace('#{inventory}', inventory);
           roomHtml = roomHtml.replace('#{roomId}', roomId);
-          roomHtml = roomHtml.replace('#{exists}', exists);
+          roomHtml = roomHtml.replace('#{exits}', exits);
           res.statusCode = 200;
           res.setHeader('Content-Type', 'text/html');
           res.write(roomHtml);
           return res.end();
         } else {
           res.statusCode = 302;
-          res.setHeader('Location', `/room/${currentRoom.id}`);
+          res.setHeader('Location', `/rooms/${currentRoom.id}`);
           res.setHeader('Content-Type', 'text/html');
 
           return res.end();
         }
+      } else if (urlParts.length === 4) {
+        const roomId = parseInt(urlParts[2]);
+        const direction = urlParts[3];
+        const currentRoom = player.currentRoom;
+        if (roomId === currentRoom.id) {
+          try {
+            player.move(direction[0]);
+            const newRoom = player.currentRoom;
+            res.statusCode = 302;
+            res.setHeader('Location', `/rooms/${newRoom.id}`);
+            res.setHeader('Content-Type', 'text/html');
+            return res.end();
+          } catch (error) {
+            const newRoom = player.currentRoom;
+            res.statusCode = 302;
+            res.setHeader('Location', `/rooms/${newRoom.id}`);
+            res.setHeader('Content-Type', 'text/html');
+          }
+        } else {
+          res.statusCode = 302;
+          res.setHeader('Location', `/room/${currentRoom.id}`);
+          res.setHeader('Content-Type', 'text/html');
+          return res.end();
+        }
       }
+    } else if (req.url.startsWith('/items/')) {
+      let urlParts = req.url.split('/');
+      if (urlParts.length === 4) {
+        const itemId = urlParts[2];
+        const action = urlParts[3];
+        try {
+          switch (action) {
+            case 'eat':
+              player.eatItem(itemId);
+              break;
+            case 'take':
+              player.takeItem(itemId);
+              break;
+            case 'drop':
+              player.dropItem(itemId);
+              break;
+            default:
+              break;
+          }
+          const newRoom = player.currentRoom;
+          res.statusCode = 302;
+          res.setHeader('Location', `/rooms/${newRoom.id}`);
+          res.setHeader('Content-Type', 'text/html');
+        } catch (error) {
+          const newRoom = player.currentRoom;
+          res.statusCode = 302;
+          res.setHeader('Location', `/rooms/${newRoom.id}`);
+          res.setHeader('Content-Type', 'text/html');
+          return res.end();
+        }
+      }
+      const newRoom = player.currentRoom;
+      res.statusCode = 302;
+      res.setHeader('Location', `/rooms/${newRoom.id}`);
+      res.setHeader('Content-Type', 'text/html');
+      return res.end();
     } else {
-      console.log('not matching');
+      const newRoom = player.currentRoom;
+      res.statusCode = 302;
+      res.setHeader('Location', `/room/${currentRoom.id}`);
+      res.setHeader('Content-Type', 'text/html');
       return res.end();
     }
 
