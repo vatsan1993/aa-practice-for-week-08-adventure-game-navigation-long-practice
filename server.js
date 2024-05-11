@@ -146,6 +146,12 @@ const server = http.createServer((req, res) => {
       res.setHeader('Location', `/rooms/${newRoom.id}`);
       res.setHeader('Content-Type', 'text/html');
       return res.end();
+    } else if (req.method == 'GET' && req.url == '/views/static/common.css') {
+      let roomCss = fs.readFileSync('./views/assets/css/common.css', 'utf-8');
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'text/css');
+      res.write(roomCss);
+      return res.end();
     } else {
       const newRoom = player.currentRoom;
       res.statusCode = 302;
